@@ -37,6 +37,13 @@ function stop(s: Omit<Stop, "tagLabel"> & { tag?: Tag; tagLabel?: string }): Sto
   return { ...s, tagLabel: s.tagLabel ?? (s.tag ? TAG_LABEL[s.tag] : undefined) };
 }
 
+export const homePoint = {
+  name: "집",
+  address: "인천광역시 계양구 효서로 381",
+  lat: 37.5293419,
+  lng: 126.7370702,
+};
+
 export const meta = {
   title: "9월의 속초",
   eyebrow: "Sokcho · 1박 2일",
@@ -104,8 +111,8 @@ export const days: Day[] = [
         desc: "영랑동, 등대해수욕장 도보 5분. 짐만 맡기고 바로 이동함.",
         photoPlace: "hotel",
         mapQuery: "속초 아이파크 스위트호텔",
-        lat: 38.2136384,
-        lng: 128.5965975,
+        lat: 38.2134432,
+        lng: 128.5967365,
       }),
       stop({
         time: "16:30",
@@ -129,8 +136,8 @@ export const days: Day[] = [
         desc: "R층(28층) 옥상 야외 수영장.",
         note: "3부제 08–12 · 13–17 · 18–22시, 입장은 마감 30분 전까지 · 패키지 특성상 1회 이용이라 이 세션 사용함",
         photoPlace: "pool",
-        lat: 38.2136384,
-        lng: 128.5965975,
+        lat: 38.2134432,
+        lng: 128.5967365,
       }),
       stop({
         time: "20:30",
