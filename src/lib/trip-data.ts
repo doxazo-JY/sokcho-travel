@@ -21,7 +21,6 @@ export type Day = {
   dayNum: number;
   title: string;
   date: string;
-  dateISO: string;
   stops: Stop[];
 };
 
@@ -59,7 +58,6 @@ export const days: Day[] = [
     dayNum: 1,
     title: "새벽부터 야경까지",
     date: "9월 18일 금요일",
-    dateISO: "2026-09-18",
     stops: [
       stop({
         time: "06:00",
@@ -167,7 +165,6 @@ export const days: Day[] = [
     dayNum: 2,
     title: "천천히, 집으로",
     date: "9월 19일 토요일",
-    dateISO: "2026-09-19",
     stops: [
       stop({ time: "08:00", tag: "rest", tagLabel: "조식", stay: true, name: "아침 식사" }),
       stop({
@@ -253,28 +250,6 @@ export const tipLinks = [{ label: "속초 맛집 추천", href: "https://www.you
 
 export function naverMapUrl(query: string) {
   return `https://map.naver.com/p/search/${encodeURIComponent(query)}`;
-}
-
-/** 구글 캘린더에 일정 하나를 등록하는 링크. 시간이 없으면 종일 일정으로 만든다. */
-export function googleCalendarUrl(stop: Stop, dateISO: string): string {
-  const text = encodeURIComponent(stop.name);
-  const details = encodeURIComponent(stop.desc ?? "");
-  const location = encodeURIComponent(stop.mapQuery ?? stop.name);
-  const date = dateISO.replace(/-/g, "");
-
-  if (!stop.time) {
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${date}/${date}&details=${details}&location=${location}`;
-  }
-
-  const [h, m] = stop.time.split(":").map(Number);
-  const startMinutes = h * 60 + m;
-  const endMinutes = startMinutes + 60;
-  const fmt = (mins: number) => {
-    const hh = String(Math.floor(mins / 60) % 24).padStart(2, "0");
-    const mm = String(mins % 60).padStart(2, "0");
-    return `${date}T${hh}${mm}00`;
-  };
-  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${fmt(startMinutes)}/${fmt(endMinutes)}&details=${details}&location=${location}&ctz=Asia/Seoul`;
 }
 
 

@@ -1,11 +1,11 @@
 import type { Stop } from "@/lib/trip-data";
-import { googleCalendarUrl, naverMapUrl, photosFor } from "@/lib/trip-data";
+import { naverMapUrl, photosFor } from "@/lib/trip-data";
 import PhotoCarousel from "./PhotoCarousel";
 
 const TAG_DOT_ACTIVE = "before:bg-current";
 const TAG_DOT_TBD = "before:bg-transparent before:border before:border-dashed before:border-ink-faint";
 
-export default function StopBlock({ stop, dateISO }: { stop: Stop; dateISO: string }) {
+export default function StopBlock({ stop }: { stop: Stop }) {
   const photos = photosFor(stop.photoPlace);
   const dotColor = stop.stay ? "bg-sunrise border-sunrise" : "bg-sand border-sea-mid";
   const dotStyle = stop.tbd
@@ -63,16 +63,6 @@ export default function StopBlock({ stop, dateISO }: { stop: Stop; dateISO: stri
               className="inline-flex items-center gap-1 whitespace-nowrap rounded border border-sand-line bg-sea-mid-soft px-2.5 py-0.5 text-[0.76rem] font-bold text-sea-deep no-underline hover:bg-sand-line after:content-['↗'] after:text-[0.75em]"
             >
               길찾기
-            </a>
-          )}
-          {stop.time && (
-            <a
-              href={googleCalendarUrl(stop, dateISO)}
-              target="_blank"
-              rel="noopener"
-              className="inline-flex items-center gap-1 whitespace-nowrap rounded border border-sand-line bg-sea-mid-soft px-2.5 py-0.5 text-[0.76rem] font-bold text-sea-deep no-underline hover:bg-sand-line after:content-['↗'] after:text-[0.75em]"
-            >
-              캘린더 추가
             </a>
           )}
         </div>
