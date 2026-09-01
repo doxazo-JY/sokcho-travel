@@ -40,6 +40,10 @@ export default function NaverRouteMap({
   useEffect(() => {
     onSelectRef.current = onSelect;
   }, [onSelect]);
+  const selectedIdRef = useRef(selectedId);
+  useEffect(() => {
+    selectedIdRef.current = selectedId;
+  }, [selectedId]);
 
   useEffect(() => {
     if (!NAVER_MAP_CLIENT_ID || points.length === 0) return;
@@ -81,14 +85,27 @@ export default function NaverRouteMap({
         strokeStyle: "shortdash",
       });
 
-      points.forEach((p) => {
+      // 같은 좌표(예: 호텔 체크인과 그 안 수영장)는 마커가 완전히 겹쳐 하나만 보이므로,
+      // 좌표별로 묶어서 번호를 합친 마커 하나로 표시하고 클릭할 때마다 그 안의 지점을
+      // 번갈아 선택한다.
+      const groups = new Map<string, RoutePoint[]>();
+      for (const p of points) {
+        const key = `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`;
+        const list = groups.get(key) ?? [];
+        list.push(p);
+        groups.set(key, list);
+      }
+
+      for (const group of groups.values()) {
+        const label = group.map((p) => p.order).join("·");
         const pinEl = document.createElement("div");
-        pinEl.title = p.name;
+        pinEl.title = group.map((p) => p.name).join(" · ");
         pinEl.style.cursor = "pointer";
         Object.assign(pinEl.style, {
-          width: "26px",
+          minWidth: "26px",
           height: "26px",
-          borderRadius: "50%",
+          padding: "0 4px",
+          borderRadius: "13px",
           border: "2px solid #fcfbf4",
           background: MARKER_COLOR,
           boxShadow: "0 1px 4px rgba(74,56,48,0.4)",
@@ -100,11 +117,12 @@ export default function NaverRouteMap({
           color: "#fcfbf4",
           fontFamily: "IBM Plex Mono, monospace",
         });
-        pinEl.textContent = String(p.order);
-        pinElsRef.current.set(p.id, pinEl);
+        pinEl.textContent = label;
+        for (const p of group) pinElsRef.current.set(p.id, pinEl);
 
+        const first = group[0];
         const marker = new naver.maps.Marker({
-          position: new naver.maps.LatLng(p.lat, p.lng),
+          position: new naver.maps.LatLng(first.lat, first.lng),
           map,
           icon: {
             content: pinEl,
@@ -113,8 +131,13 @@ export default function NaverRouteMap({
           },
           zIndex: 10,
         });
-        naver.maps.Event.addListener(marker, "click", () => onSelectRef.current?.(p.id));
-      });
+        naver.maps.Event.addListener(marker, "click", () => {
+          const ids = group.map((p) => p.id);
+          const currentIndex = ids.indexOf(selectedIdRef.current ?? "");
+          const next = ids[(currentIndex + 1) % ids.length];
+          onSelectRef.current?.(next);
+        });
+      }
 
       map.fitBounds(bounds);
       setStatus("ready");
