@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 const TABS = [
   { href: "/", label: "일정" },
   { href: "/map", label: "지도" },
-  { href: "/prep", label: "준비" },
 ];
 
 export default function TopNav() {

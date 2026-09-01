@@ -279,33 +279,6 @@ export function googleCalendarUrl(stop: Stop, dateISO: string): string {
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${fmt(startMinutes)}/${fmt(endMinutes)}&details=${details}&location=${location}&ctz=Asia/Seoul`;
 }
 
-export const emergencyContacts = [
-  { label: "속초 아이파크 스위트호텔", value: meta.stay, mapQuery: "속초 아이파크 스위트호텔" },
-  { label: "경찰", value: "112" },
-  { label: "소방·구급", value: "119" },
-];
-
-export const packingChecklist = [
-  "신분증",
-  "휴대폰 충전기",
-  "보조배터리",
-  "수영복 · 수건 (루프탑 수영장)",
-  "편한 신발 (케이블카 · 산책)",
-  "겉옷 (전망대·야간 쌀쌀함 대비)",
-  "여벌 양말 (족욕공원)",
-  "선크림 · 모자",
-  "상비약",
-  "지갑 · 카드",
-];
-
-/** 아직 안 정한 일정(점심·카페 등)을 모든 날짜에서 모아서 "찾아볼 것" 목록으로 씀 */
-export function tbdItems(): { id: string; label: string }[] {
-  return days.flatMap((day) =>
-    day.stops
-      .filter((s) => s.tbd)
-      .map((s) => ({ id: `${day.dayNum}-${s.name}-${s.time ?? ""}`, label: `Day${day.dayNum} ${s.time ?? ""} ${s.name}`.trim() })),
-  );
-}
 
 export const PHOTO_COUNTS: Record<string, { count: number; ext: string[] }> = {
   cablecar: { count: 2, ext: ["jpg", "jpg"] },
