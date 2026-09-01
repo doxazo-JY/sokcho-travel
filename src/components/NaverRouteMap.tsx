@@ -176,8 +176,17 @@ export default function NaverRouteMap({
   }, []);
 
   useEffect(() => {
+    // 좌표가 겹치는 지점들은 같은 DOM 엘리먼트를 공유해서, id별로 따로 스타일을 매기면
+    // 그중 마지막에 처리된 id가 항상 이전 결과를 덮어써버린다 — 엘리먼트 단위로 한 번씩만
+    // 처리해서, 그 엘리먼트가 대표하는 id들 중 하나라도 선택됐으면 강조되게 한다.
+    const idsByEl = new Map<HTMLDivElement, string[]>();
     for (const [id, pinEl] of pinElsRef.current) {
-      const isSelected = id === selectedId;
+      const list = idsByEl.get(pinEl) ?? [];
+      list.push(id);
+      idsByEl.set(pinEl, list);
+    }
+    for (const [pinEl, ids] of idsByEl) {
+      const isSelected = selectedId != null && ids.includes(selectedId);
       pinEl.style.outline = isSelected ? "2px solid #4a3830" : "none";
       pinEl.style.outlineOffset = isSelected ? "1px" : "0";
       pinEl.style.transform = isSelected ? "scale(1.15)" : "scale(1)";
