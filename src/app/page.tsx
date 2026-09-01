@@ -1,5 +1,6 @@
 import { days, meta, routeOverview, tips, tipLinks } from "@/lib/trip-data";
 import DaySection from "@/components/DaySection";
+import DDayBadge from "@/components/DDayBadge";
 
 export default function Home() {
   return (
@@ -12,6 +13,7 @@ export default function Home() {
           {meta.title}
         </h1>
         <div className="mt-6 flex flex-wrap gap-2.5">
+          <DDayBadge />
           <MetaChip k="Date" v={meta.dateRange} />
           <MetaChip k="Move" v={meta.move} />
           <MetaChip k="Stay" v={meta.stay} />

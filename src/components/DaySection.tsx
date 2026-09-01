@@ -16,7 +16,7 @@ export default function DaySection({ day }: { day: Day }) {
 
       <div className="relative border-l-2 border-sand-line pl-6.5 max-[480px]:pl-5">
         {day.stops.map((stop, i) => (
-          <StopBlock key={i} stop={stop} />
+          <StopBlock key={i} stop={stop} dateISO={day.dateISO} />
         ))}
       </div>
     </div>
