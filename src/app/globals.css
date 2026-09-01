@@ -1,26 +1,46 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --sea-deep: #a8734d;
+  --sea-mid: #d5b097;
+  --sea-mid-soft: #f1e2d3;
+  --sunrise: #d5b097;
+  --sand: #f3ebe2;
+  --sand-card: #fcfbf4;
+  --sand-line: #e8d8c8;
+  --ink: #4a3830;
+  --ink-soft: #8a7468;
+  --ink-faint: #ab9a8c;
 }
+
+/* 다크모드 분기 없음 — 이 크림 톤으로 고정 */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-sea-deep: var(--sea-deep);
+  --color-sea-mid: var(--sea-mid);
+  --color-sea-mid-soft: var(--sea-mid-soft);
+  --color-sunrise: var(--sunrise);
+  --color-sand: var(--sand);
+  --color-sand-card: var(--sand-card);
+  --color-sand-line: var(--sand-line);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --font-serif: var(--font-gowun-batang);
+  --font-sans: var(--font-plex-kr);
+  --font-mono: var(--font-plex-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--sand);
+  color: var(--ink);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
