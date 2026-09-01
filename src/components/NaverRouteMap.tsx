@@ -5,18 +5,17 @@ import { loadNaverMaps } from "@/lib/naver-loader";
 
 export type RoutePoint = {
   id: string;
-  kind: "stop" | "home";
-  order?: number;
+  order: number;
   name: string;
   lat: number;
   lng: number;
+  /** false면 마커·선에는 표시되지만 지도 확대 범위 계산에서는 제외됨(예: 멀리 있는 집) */
+  boundsAnchor?: boolean;
 };
 
 const NAVER_MAP_CLIENT_ID = process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID;
 const MARKER_COLOR = "#a8734d"; // --sea-deep
 const LINE_COLOR = "#d5b097"; // --sunrise / --sea-mid
-const HOME_ICON =
-  '<path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/>';
 
 export default function NaverRouteMap({
   points,
@@ -51,32 +50,31 @@ export default function NaverRouteMap({
       mapCreatedRef.current = true;
 
       const naver = window.naver;
-      const anchor = points.find((p) => p.kind === "stop") ?? points[0];
+      const anchorPoints = points.filter((p) => p.boundsAnchor !== false);
+      const anchor = anchorPoints[0] ?? points[0];
       const map = new naver.maps.Map(containerRef.current, {
         center: new naver.maps.LatLng(anchor.lat, anchor.lng),
         zoom: 12,
       });
       mapInstanceRef.current = map;
 
+      // 집처럼 멀리 있는 지점은 선으로는 이어주되(동선이 끊겨 보이지 않게), 확대 범위
+      // 계산에는 넣지 않는다 — 넣으면 속초 시내에 몰려있는 정류지들끼리 겹쳐 안 보일
+      // 만큼 지도가 확 줌아웃된다.
       const bounds = new naver.maps.LatLngBounds(
         new naver.maps.LatLng(anchor.lat, anchor.lng),
         new naver.maps.LatLng(anchor.lat, anchor.lng),
       );
-
-      // 집은 지도 범위 계산에서 일부러 제외한다 — 포함시키면 속초 시내에 몰려있는
-      // 정류지들이 서로 겹쳐 안 보일 만큼 지도가 확 줌아웃된다(참고용 위치일 뿐,
-      // 동선의 밀도가 중요한 곳은 속초 시내 쪽이라 그쪽 기준으로 줌을 잡는다).
-      const stopPath = points
-        .filter((p) => p.kind === "stop")
-        .map((p) => {
-          const pos = new naver.maps.LatLng(p.lat, p.lng);
-          bounds.extend(pos);
-          return pos;
-        });
+      const path = points.map((p) => {
+        const pos = new naver.maps.LatLng(p.lat, p.lng);
+        if (p.boundsAnchor !== false) bounds.extend(pos);
+        return pos;
+      });
+      boundsRef.current = bounds;
 
       new naver.maps.Polyline({
         map,
-        path: stopPath,
+        path,
         strokeColor: LINE_COLOR,
         strokeWeight: 3,
         strokeOpacity: 0.8,
@@ -87,42 +85,22 @@ export default function NaverRouteMap({
         const pinEl = document.createElement("div");
         pinEl.title = p.name;
         pinEl.style.cursor = "pointer";
-
-        if (p.kind === "home") {
-          Object.assign(pinEl.style, {
-            width: "24px",
-            height: "24px",
-            borderRadius: "6px",
-            border: "1.5px solid #4a3830",
-            background: "#fcfbf4",
-            boxShadow: "0 1px 4px rgba(74,56,48,0.35)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#4a3830",
-          });
-          pinEl.innerHTML =
-            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-            HOME_ICON +
-            "</svg>";
-        } else {
-          Object.assign(pinEl.style, {
-            width: "26px",
-            height: "26px",
-            borderRadius: "50%",
-            border: "2px solid #fcfbf4",
-            background: MARKER_COLOR,
-            boxShadow: "0 1px 4px rgba(74,56,48,0.4)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "12px",
-            fontWeight: "bold",
-            color: "#fcfbf4",
-            fontFamily: "IBM Plex Mono, monospace",
-          });
-          pinEl.textContent = String(p.order);
-        }
+        Object.assign(pinEl.style, {
+          width: "26px",
+          height: "26px",
+          borderRadius: "50%",
+          border: "2px solid #fcfbf4",
+          background: MARKER_COLOR,
+          boxShadow: "0 1px 4px rgba(74,56,48,0.4)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "12px",
+          fontWeight: "bold",
+          color: "#fcfbf4",
+          fontFamily: "IBM Plex Mono, monospace",
+        });
+        pinEl.textContent = String(p.order);
         pinElsRef.current.set(p.id, pinEl);
 
         const marker = new naver.maps.Marker({
@@ -138,7 +116,6 @@ export default function NaverRouteMap({
         naver.maps.Event.addListener(marker, "click", () => onSelectRef.current?.(p.id));
       });
 
-      boundsRef.current = bounds;
       map.fitBounds(bounds);
       setStatus("ready");
     }

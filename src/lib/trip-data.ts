@@ -59,7 +59,15 @@ export const days: Day[] = [
     title: "새벽부터 야경까지",
     date: "9월 18일 금요일",
     stops: [
-      stop({ time: "06:00", tag: "move", name: "인천 계양구 출발" }),
+      stop({
+        time: "06:00",
+        tag: "move",
+        name: "인천 계양구 출발",
+        desc: homePoint.address,
+        mapQuery: homePoint.address,
+        lat: homePoint.lat,
+        lng: homePoint.lng,
+      }),
       stop({
         time: "09:00",
         tag: "act",
@@ -159,7 +167,15 @@ export const days: Day[] = [
     date: "9월 19일 토요일",
     stops: [
       stop({ time: "08:00", tag: "rest", tagLabel: "조식", stay: true, name: "아침 식사" }),
-      stop({ time: "09:30", tag: "rest", tagLabel: "체크아웃", name: "체크아웃" }),
+      stop({
+        time: "09:30",
+        tag: "rest",
+        tagLabel: "체크아웃",
+        name: "체크아웃",
+        mapQuery: "속초 아이파크 스위트호텔",
+        lat: 38.2134432,
+        lng: 128.5967365,
+      }),
       stop({
         time: "10:00",
         tag: "act",
@@ -186,7 +202,15 @@ export const days: Day[] = [
         lat: 38.1859486,
         lng: 128.5424879,
       }),
-      stop({ time: "14:30", tag: "move", name: "귀가" }),
+      stop({
+        time: "14:30",
+        tag: "move",
+        name: "귀가",
+        desc: homePoint.address,
+        mapQuery: homePoint.address,
+        lat: homePoint.lat,
+        lng: homePoint.lng,
+      }),
     ],
   },
 ];
