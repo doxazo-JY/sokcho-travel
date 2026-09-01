@@ -255,8 +255,6 @@ export function naverMapUrl(query: string) {
   return `https://map.naver.com/p/search/${encodeURIComponent(query)}`;
 }
 
-export const tripStartDateISO = "2026-09-18";
-
 /** 구글 캘린더에 일정 하나를 등록하는 링크. 시간이 없으면 종일 일정으로 만든다. */
 export function googleCalendarUrl(stop: Stop, dateISO: string): string {
   const text = encodeURIComponent(stop.name);
