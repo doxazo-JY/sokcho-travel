@@ -2,7 +2,13 @@ import type { Stop } from "@/lib/trip-data";
 import { naverMapUrl, photosFor } from "@/lib/trip-data";
 import PhotoCarousel from "./PhotoCarousel";
 
-export default function StopDetailPanel({ stop }: { stop: Stop }) {
+export default function StopDetailPanel({
+  stop,
+  onClose,
+}: {
+  stop: Stop;
+  onClose?: () => void;
+}) {
   const photos = photosFor(stop.photoPlace);
 
   return (
@@ -13,7 +19,17 @@ export default function StopDetailPanel({ stop }: { stop: Stop }) {
             {stop.time}
           </span>
         )}
-        <p className="m-0 text-[1rem] font-bold text-ink">{stop.name}</p>
+        <p className="m-0 flex-1 text-[1rem] font-bold text-ink">{stop.name}</p>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="닫기"
+            className="ml-auto rounded p-1 text-ink-faint hover:bg-sand-line hover:text-ink"
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       {stop.desc && <p className="m-0 max-w-[58ch] text-[0.9rem] text-ink-soft">{stop.desc}</p>}

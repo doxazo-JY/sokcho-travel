@@ -102,7 +102,12 @@ export default function MapPage() {
               ))}
             </div>
 
-            {selectedStop && <StopDetailPanel stop={selectedStop} />}
+            {selectedStop && (
+              <StopDetailPanel
+                stop={selectedStop}
+                onClose={() => setSelected((prev) => ({ ...prev, [day.dayNum]: null }))}
+              />
+            )}
           </section>
         );
       })}
