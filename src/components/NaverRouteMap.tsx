@@ -18,6 +18,7 @@ const MARKER_COLOR = "#a8734d"; // --sea-deep
 const LINE_COLOR = "#d5b097"; // --sunrise / --sea-mid
 const SELECTED_ZOOM = 15; // 축척 약 300m
 const MY_LOCATION_COLOR = "#3b82f6";
+const LOCATION_CONSENT_KEY = "sokcho:my-location-consent";
 
 function createMyLocationPuck() {
   const puck = document.createElement("div");
@@ -283,15 +284,39 @@ export default function NaverRouteMap({
         if (!hasCenteredOnMeRef.current) {
           hasCenteredOnMeRef.current = true;
           map.morph(position, SELECTED_ZOOM);
+          try {
+            localStorage.setItem(LOCATION_CONSENT_KEY, "1");
+          } catch {
+            // 저장 실패해도 이번 세션 추적엔 지장 없음
+          }
         }
       },
-      () => {
+      (err) => {
         setLocError("위치 권한을 확인해주세요.");
+        if (err.code === err.PERMISSION_DENIED) {
+          try {
+            localStorage.removeItem(LOCATION_CONSENT_KEY);
+          } catch {
+            // 무시
+          }
+        }
         stopTracking();
       },
       { enableHighAccuracy: true, maximumAge: 1000 },
     );
   }
+
+  useEffect(() => {
+    if (status !== "ready") return;
+    let consented = false;
+    try {
+      consented = localStorage.getItem(LOCATION_CONSENT_KEY) === "1";
+    } catch {
+      // 무시 — 그냥 자동 시작 안 함
+    }
+    if (consented) startTracking();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
 
   useEffect(() => {
     return () => stopTracking();
