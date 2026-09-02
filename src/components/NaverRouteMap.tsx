@@ -17,6 +17,19 @@ const NAVER_MAP_CLIENT_ID = process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID;
 const MARKER_COLOR = "#a8734d"; // --sea-deep
 const LINE_COLOR = "#d5b097"; // --sunrise / --sea-mid
 const SELECTED_ZOOM = 15; // 축척 약 300m
+const MY_LOCATION_COLOR = "#3b82f6";
+
+function createMyLocationPuck() {
+  const puck = document.createElement("div");
+  puck.style.position = "relative";
+  puck.style.width = "22px";
+  puck.style.height = "22px";
+  puck.innerHTML = `
+    <div style="position:absolute;inset:0;border-radius:50%;background:${MY_LOCATION_COLOR};border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.4);"></div>
+    <div style="position:absolute;left:50%;top:-8px;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:8px solid ${MY_LOCATION_COLOR};"></div>
+  `;
+  return puck;
+}
 
 export default function NaverRouteMap({
   points,
@@ -47,6 +60,16 @@ export default function NaverRouteMap({
   useEffect(() => {
     selectedIdRef.current = selectedId;
   }, [selectedId]);
+
+  const [tracking, setTracking] = useState(false);
+  const [locError, setLocError] = useState<string | null>(null);
+  const watchIdRef = useRef<number | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const myMarkerRef = useRef<any>(null);
+  const myPuckElRef = useRef<HTMLDivElement | null>(null);
+  const orientationHandlerRef = useRef<((e: Event) => void) | null>(null);
+  const orientationEventRef = useRef<string | null>(null);
+  const hasCenteredOnMeRef = useRef(false);
 
   useEffect(() => {
     if (!NAVER_MAP_CLIENT_ID || points.length === 0) return;
@@ -182,6 +205,99 @@ export default function NaverRouteMap({
     return () => observer.disconnect();
   }, []);
 
+  function stopTracking() {
+    if (watchIdRef.current != null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    if (orientationHandlerRef.current && orientationEventRef.current) {
+      window.removeEventListener(orientationEventRef.current, orientationHandlerRef.current);
+      orientationHandlerRef.current = null;
+      orientationEventRef.current = null;
+    }
+    if (myMarkerRef.current) {
+      myMarkerRef.current.setMap(null);
+      myMarkerRef.current = null;
+    }
+    myPuckElRef.current = null;
+    hasCenteredOnMeRef.current = false;
+    setTracking(false);
+  }
+
+  async function startTracking() {
+    if (!navigator.geolocation) {
+      setLocError("이 브라우저에서는 위치 확인이 안 돼요.");
+      return;
+    }
+    setLocError(null);
+    setTracking(true);
+
+    // iOS(Safari)는 방향 센서 권한을 사용자 제스처(버튼 클릭) 안에서만 물어볼 수 있다.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const DOE = (window as any).DeviceOrientationEvent;
+    if (DOE && typeof DOE.requestPermission === "function") {
+      try {
+        await DOE.requestPermission();
+      } catch {
+        // 거부돼도 위치 표시 자체는 계속 진행
+      }
+    }
+
+    const eventName = "ondeviceorientationabsolute" in window ? "deviceorientationabsolute" : "deviceorientation";
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const onOrientation = (e: any) => {
+      let heading: number | null = null;
+      if (typeof e.webkitCompassHeading === "number") {
+        heading = e.webkitCompassHeading;
+      } else if (typeof e.alpha === "number") {
+        heading = 360 - e.alpha;
+      }
+      if (heading != null && myPuckElRef.current) {
+        myPuckElRef.current.style.transform = `rotate(${heading}deg)`;
+      }
+    };
+    window.addEventListener(eventName, onOrientation);
+    orientationHandlerRef.current = onOrientation;
+    orientationEventRef.current = eventName;
+
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (pos) => {
+        const naver = window.naver;
+        const map = mapInstanceRef.current;
+        if (!naver || !map) return;
+        const position = new naver.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+
+        if (!myMarkerRef.current) {
+          const puck = createMyLocationPuck();
+          myPuckElRef.current = puck;
+          myMarkerRef.current = new naver.maps.Marker({
+            position,
+            map,
+            icon: { content: puck, size: new naver.maps.Size(22, 22), anchor: new naver.maps.Point(11, 11) },
+            zIndex: 200,
+          });
+        } else {
+          myMarkerRef.current.setPosition(position);
+        }
+
+        if (!hasCenteredOnMeRef.current) {
+          hasCenteredOnMeRef.current = true;
+          map.morph(position, SELECTED_ZOOM);
+        }
+      },
+      () => {
+        setLocError("위치 권한을 확인해주세요.");
+        stopTracking();
+      },
+      { enableHighAccuracy: true, maximumAge: 1000 },
+    );
+  }
+
+  useEffect(() => {
+    return () => stopTracking();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     // 좌표가 겹치는 지점들은 같은 DOM 엘리먼트를 공유해서, id별로 따로 스타일을 매기면
     // 그중 마지막에 처리된 id가 항상 이전 결과를 덮어써버린다 — 엘리먼트 단위로 한 번씩만
@@ -207,6 +323,24 @@ export default function NaverRouteMap({
   return (
     <div className="relative h-full w-full overflow-hidden rounded-sm border border-sand-line">
       <div ref={containerRef} className="h-full w-full" />
+      {status === "ready" && (
+        <button
+          type="button"
+          onClick={() => (tracking ? stopTracking() : startTracking())}
+          className={`absolute right-2 top-2 z-10 rounded-full border px-2.5 py-1.5 text-[0.72rem] font-bold shadow ${
+            tracking
+              ? "border-sea-deep bg-sea-deep text-sand-card"
+              : "border-sand-line bg-sand-card/95 text-sea-deep hover:bg-sand-line"
+          }`}
+        >
+          {tracking ? "내 위치 끄기" : "내 위치"}
+        </button>
+      )}
+      {locError && (
+        <div className="absolute left-2 top-2 z-10 rounded bg-sand-card/95 px-2 py-1 text-[0.7rem] text-ink-faint">
+          {locError}
+        </div>
+      )}
       {status === "loading" && (
         <div className="absolute inset-0 flex items-center justify-center bg-sand-card text-[0.85rem] text-ink-faint">
           지도를 불러오는 중...
