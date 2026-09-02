@@ -250,8 +250,12 @@ export const tips = [
 
 export const tipLinks = [{ label: "속초 맛집 추천", href: "https://www.youtube.com/shorts/g8beNfzOuAU" }];
 
-export function naverMapUrl(query: string) {
-  return `https://map.naver.com/p/search/${encodeURIComponent(query)}`;
+export function tmapUrl(stop: Pick<Stop, "name" | "mapQuery" | "lat" | "lng">) {
+  const name = encodeURIComponent(stop.mapQuery ?? stop.name);
+  if (stop.lat != null && stop.lng != null) {
+    return `tmap://route?goalname=${name}&goalx=${stop.lng}&goaly=${stop.lat}`;
+  }
+  return `tmap://search?name=${name}`;
 }
 
 

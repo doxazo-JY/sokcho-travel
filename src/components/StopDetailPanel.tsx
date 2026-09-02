@@ -1,5 +1,5 @@
 import type { Stop } from "@/lib/trip-data";
-import { naverMapUrl, photosFor } from "@/lib/trip-data";
+import { tmapUrl, photosFor } from "@/lib/trip-data";
 import PhotoCarousel from "./PhotoCarousel";
 
 export default function StopDetailPanel({
@@ -53,7 +53,7 @@ export default function StopDetailPanel({
         ))}
         {stop.mapQuery && (
           <a
-            href={naverMapUrl(stop.mapQuery)}
+            href={tmapUrl(stop)}
             target="_blank"
             rel="noopener"
             className="inline-flex items-center gap-1 whitespace-nowrap rounded border border-sand-line bg-sea-mid-soft px-2.5 py-0.5 text-[0.76rem] font-bold text-sea-deep no-underline hover:bg-sand-line after:content-['↗'] after:text-[0.75em]"
