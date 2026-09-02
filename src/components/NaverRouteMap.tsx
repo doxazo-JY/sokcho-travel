@@ -25,7 +25,7 @@ function createMyLocationPuck() {
   puck.style.width = "22px";
   puck.style.height = "22px";
   puck.innerHTML = `
-    <div style="position:absolute;inset:0;border-radius:50%;background:${MY_LOCATION_COLOR};border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.4);"></div>
+    <div style="position:absolute;inset:0;border-radius:50%;background:${MY_LOCATION_COLOR};border:2px solid #fff;box-shadow:0 1px 4px rgba(74,56,48,0.4);"></div>
     <div style="position:absolute;left:50%;top:-8px;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:8px solid ${MY_LOCATION_COLOR};"></div>
   `;
   return puck;
@@ -327,10 +327,10 @@ export default function NaverRouteMap({
         <button
           type="button"
           onClick={() => (tracking ? stopTracking() : startTracking())}
-          className={`absolute right-2 top-2 z-10 rounded-full border px-2.5 py-1.5 text-[0.72rem] font-bold shadow ${
+          className={`absolute right-2 top-2 z-10 rounded-full border px-2.5 py-1.5 text-[0.72rem] font-bold ${
             tracking
               ? "border-sea-deep bg-sea-deep text-sand-card"
-              : "border-sand-line bg-sand-card/95 text-sea-deep hover:bg-sand-line"
+              : "border-sand-line bg-sand-card/85 text-sea-deep hover:bg-sand-line"
           }`}
         >
           {tracking ? "내 위치 끄기" : "내 위치"}

@@ -56,7 +56,7 @@ export default function StopDetailPanel({
             href={tmapUrl(stop)}
             target="_blank"
             rel="noopener"
-            className="inline-flex items-center gap-1 whitespace-nowrap rounded border border-sand-line bg-sea-mid-soft px-2.5 py-0.5 text-[0.76rem] font-bold text-sea-deep no-underline hover:bg-sand-line after:content-['↗'] after:text-[0.75em]"
+            className="inline-flex items-center gap-1 whitespace-nowrap rounded border border-sea-deep bg-sea-deep px-2.5 py-0.5 text-[0.76rem] font-bold text-sand-card no-underline hover:bg-ink after:content-['↗'] after:text-[0.75em]"
           >
             길찾기
           </a>
