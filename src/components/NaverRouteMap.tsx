@@ -18,7 +18,6 @@ const MARKER_COLOR = "#a8734d"; // --sea-deep
 const LINE_COLOR = "#d5b097"; // --sunrise / --sea-mid
 const SELECTED_ZOOM = 15; // 축척 약 300m
 const MY_LOCATION_COLOR = "#3b82f6";
-const LOCATION_CONSENT_KEY = "sokcho:my-location-consent";
 
 function createMyLocationPuck() {
   const puck = document.createElement("div");
@@ -62,8 +61,6 @@ export default function NaverRouteMap({
     selectedIdRef.current = selectedId;
   }, [selectedId]);
 
-  const [tracking, setTracking] = useState(false);
-  const [locError, setLocError] = useState<string | null>(null);
   const watchIdRef = useRef<number | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const myMarkerRef = useRef<any>(null);
@@ -222,18 +219,14 @@ export default function NaverRouteMap({
     }
     myPuckElRef.current = null;
     hasCenteredOnMeRef.current = false;
-    setTracking(false);
   }
 
   async function startTracking() {
-    if (!navigator.geolocation) {
-      setLocError("이 브라우저에서는 위치 확인이 안 돼요.");
-      return;
-    }
-    setLocError(null);
-    setTracking(true);
+    if (!navigator.geolocation) return;
 
-    // iOS(Safari)는 방향 센서 권한을 사용자 제스처(버튼 클릭) 안에서만 물어볼 수 있다.
+    // iOS(Safari)는 방향 센서 권한을 사용자 제스처 안에서만 물어볼 수 있어서, 버튼 없이
+    // 자동 시작하는 지금 흐름에서는 대부분 조용히 실패한다 — 위치 점 자체는 뜨지만
+    // 나침반 회전은 안 될 수 있다는 뜻. 큰 문제는 아니라 그대로 시도만 해본다.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const DOE = (window as any).DeviceOrientationEvent;
     if (DOE && typeof DOE.requestPermission === "function") {
@@ -284,22 +277,11 @@ export default function NaverRouteMap({
         if (!hasCenteredOnMeRef.current) {
           hasCenteredOnMeRef.current = true;
           map.morph(position, SELECTED_ZOOM);
-          try {
-            localStorage.setItem(LOCATION_CONSENT_KEY, "1");
-          } catch {
-            // 저장 실패해도 이번 세션 추적엔 지장 없음
-          }
         }
       },
-      (err) => {
-        setLocError("위치 권한을 확인해주세요.");
-        if (err.code === err.PERMISSION_DENIED) {
-          try {
-            localStorage.removeItem(LOCATION_CONSENT_KEY);
-          } catch {
-            // 무시
-          }
-        }
+      () => {
+        // 위치 권한이 없거나 거부된 경우. 버튼이 없으니 조용히 무시 — 다음 로드 때
+        // 브라우저가 권한을 기억하고 있다면 자동으로 다시 시도된다.
         stopTracking();
       },
       { enableHighAccuracy: true, maximumAge: 1000 },
@@ -308,19 +290,12 @@ export default function NaverRouteMap({
 
   useEffect(() => {
     if (status !== "ready") return;
-    let consented = false;
-    try {
-      consented = localStorage.getItem(LOCATION_CONSENT_KEY) === "1";
-    } catch {
-      // 무시 — 그냥 자동 시작 안 함
-    }
-    if (consented) startTracking();
+    startTracking();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
   useEffect(() => {
     return () => stopTracking();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -348,24 +323,6 @@ export default function NaverRouteMap({
   return (
     <div className="relative h-full w-full overflow-hidden rounded-sm border border-sand-line">
       <div ref={containerRef} className="h-full w-full" />
-      {status === "ready" && (
-        <button
-          type="button"
-          onClick={() => (tracking ? stopTracking() : startTracking())}
-          className={`absolute right-2 top-2 z-10 rounded-full border px-2.5 py-1.5 text-[0.72rem] font-bold ${
-            tracking
-              ? "border-sea-deep bg-sea-deep text-sand-card"
-              : "border-sand-line bg-sand-card/85 text-sea-deep hover:bg-sand-line"
-          }`}
-        >
-          {tracking ? "내 위치 끄기" : "내 위치"}
-        </button>
-      )}
-      {locError && (
-        <div className="absolute left-2 top-2 z-10 rounded bg-sand-card/95 px-2 py-1 text-[0.7rem] text-ink-faint">
-          {locError}
-        </div>
-      )}
       {status === "loading" && (
         <div className="absolute inset-0 flex items-center justify-center bg-sand-card text-[0.85rem] text-ink-faint">
           지도를 불러오는 중...
