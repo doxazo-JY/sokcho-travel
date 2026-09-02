@@ -16,6 +16,7 @@ export type RoutePoint = {
 const NAVER_MAP_CLIENT_ID = process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID;
 const MARKER_COLOR = "#a8734d"; // --sea-deep
 const LINE_COLOR = "#d5b097"; // --sunrise / --sea-mid
+const SELECTED_ZOOM = 15; // 축척 약 300m
 
 export default function NaverRouteMap({
   points,
@@ -36,6 +37,8 @@ export default function NaverRouteMap({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const boundsRef = useRef<any>(null);
   const pinElsRef = useRef<Map<string, HTMLDivElement>>(new Map());
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const positionsRef = useRef<Map<string, any>>(new Map());
   const onSelectRef = useRef(onSelect);
   useEffect(() => {
     onSelectRef.current = onSelect;
@@ -118,11 +121,15 @@ export default function NaverRouteMap({
           fontFamily: "IBM Plex Mono, monospace",
         });
         pinEl.textContent = label;
-        for (const p of group) pinElsRef.current.set(p.id, pinEl);
-
         const first = group[0];
+        const position = new naver.maps.LatLng(first.lat, first.lng);
+        for (const p of group) {
+          pinElsRef.current.set(p.id, pinEl);
+          positionsRef.current.set(p.id, position);
+        }
+
         const marker = new naver.maps.Marker({
-          position: new naver.maps.LatLng(first.lat, first.lng),
+          position,
           map,
           icon: {
             content: pinEl,
@@ -191,6 +198,10 @@ export default function NaverRouteMap({
       pinEl.style.outlineOffset = isSelected ? "1px" : "0";
       pinEl.style.transform = isSelected ? "scale(1.15)" : "scale(1)";
     }
+
+    const map = mapInstanceRef.current;
+    const position = selectedId != null ? positionsRef.current.get(selectedId) : undefined;
+    if (map && position) map.morph(position, SELECTED_ZOOM);
   }, [selectedId]);
 
   return (
